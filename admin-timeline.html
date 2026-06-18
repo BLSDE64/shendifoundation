@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Timeline Admin — SHENDI Foundation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="css/redesign.css">
+  <style>
+    body{background:var(--linen-100);padding:40px 20px;}
+    .admin-wrap{max-width:760px;margin:0 auto;}
+    .admin-card{background:var(--white);border-radius:var(--radius-md);padding:32px;box-shadow:var(--shadow-sm);margin-bottom:24px;}
+    .admin-card h2{font-size:1.3rem;}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    .field-label{display:block;font-size:.82rem;font-weight:600;color:var(--ink-700);margin:14px 0 6px;}
+    .entry-row{display:flex;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid var(--linen-100);}
+    .entry-row:last-child{border-bottom:none;}
+    .entry-row img{width:64px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0;background:var(--linen-100);}
+    .entry-row .meta{flex:1;font-size:.88rem;color:var(--ink-700);}
+    .entry-row .meta b{color:var(--ink-900);}
+    .entry-actions{display:flex;gap:8px;}
+    .btn-small{padding:8px 16px;font-size:.84rem;border-radius:100px;border:1px solid var(--linen-100);background:var(--linen-50);cursor:pointer;}
+    .btn-small.danger{color:var(--clay-600);border-color:#f3dcd3;}
+    .status-msg{font-size:.88rem;margin-top:10px;}
+    .status-msg.error{color:var(--clay-600);}
+    .status-msg.ok{color:var(--canopy-700);}
+    .locked-note{font-size:.85rem;color:var(--ink-500);margin-top:8px;}
+  </style>
+</head>
+<body>
+  <div class="admin-wrap">
+    <h1 style="font-family:var(--font-display);margin-bottom:4px;">Timeline Admin</h1>
+    <p style="color:var(--ink-500);margin-bottom:24px;">Add, edit, or remove events on the public "Time line" section. Changes appear on the live site immediately — no redeploy needed.</p>
+
+    <div class="admin-card" id="lock-card">
+      <h2>Enter admin password</h2>
+      <input type="password" id="admin-key" class="field" placeholder="Admin password" style="margin-top:10px;">
+      <button class="btn btn-gold" style="margin-top:14px;" onclick="unlock()">Unlock</button>
+      <p class="locked-note">This is the value you set as the <code>ADMIN_KEY</code> environment variable in your Netlify project settings.</p>
+      <p id="lock-status" class="status-msg"></p>
+    </div>
+
+    <div id="app" style="display:none;">
+      <div class="admin-card">
+        <h2 id="form-title">Add a new event</h2>
+
+        <label class="field-label">Photo</label>
+        <input type="file" id="f-image" accept="image/*" class="field">
+        <img id="f-preview" style="display:none;margin-top:10px;max-height:160px;border-radius:10px;">
+
+        <div class="row2">
+          <div>
+            <label class="field-label">Date</label>
+            <input type="date" id="f-date" class="field">
+          </div>
+          <div>
+            <label class="field-label">Time (e.g. 9:30 AM — 11:30 AM)</label>
+            <input type="text" id="f-time" class="field">
+          </div>
+        </div>
+
+        <label class="field-label">Location</label>
+        <input type="text" id="f-location" class="field" placeholder="e.g. Mbale Main Hospital">
+
+        <label class="field-label">Description</label>
+        <textarea id="f-description" class="field" rows="4" placeholder="What happened at this event"></textarea>
+
+        <div style="display:flex;gap:10px;margin-top:18px;">
+          <button class="btn btn-gold" id="submit-btn" onclick="submitEntry()">Add event</button>
+          <button class="btn btn-outline-dark" id="cancel-edit-btn" style="display:none;" onclick="resetForm()">Cancel edit</button>
+        </div>
+        <p id="form-status" class="status-msg"></p>
+      </div>
+
+      <div class="admin-card">
+        <h2>Existing events</h2>
+        <p style="color:var(--ink-500);font-size:.88rem;">Nothing here yet? If you're migrating from the old static timeline, you can import the two original events first.</p>
+        <button class="btn-small" onclick="seedOriginalEvents()">Import original 2 events</button>
+        <div id="entry-list" style="margin-top:16px;"></div>
+        <p id="list-status" class="status-msg"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const FN_URL = '/.netlify/functions/timeline';
+    let adminKey = sessionStorage.getItem('shendi_admin_key') || '';
+    let editingId = null;
+    let pendingImageDataUrl = null;
+
+    function setStatus(elId, msg, type) {
+      const el = document.getElementById(elId);
+      el.textContent = msg || '';
+      el.className = 'status-msg' + (type ? ' ' + type : '');
+    }
+
+    async function unlock() {
+      const val = document.getElementById('admin-key').value.trim();
+      if (!val) { setStatus('lock-status', 'Enter a password first.', 'error'); return; }
+      adminKey = val;
+      // verify by attempting a harmless POST-less check: just try loading the list,
+      // then confirm the key works the first time they actually save something.
+      sessionStorage.setItem('shendi_admin_key', adminKey);
+      document.getElementById('lock-card').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      loadEntries();
+    }
+
+    if (adminKey) {
+      document.getElementById('lock-card').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      loadEntries();
+    }
+
+    function fileToCompressedDataURL(file, maxWidth, quality) {
+      maxWidth = maxWidth || 1600;
+      quality = quality || 0.82;
+      return new Promise(function (resolve, reject) {
+        const reader = new FileReader();
+        reader.onload = function () {
+          const img = new Image();
+          img.onload = function () {
+            const scale = Math.min(1, maxWidth / img.width);
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(img.width * scale);
+            canvas.height = Math.round(img.height * scale);
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+          img.onerror = reject;
+          img.src = reader.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    document.getElementById('f-image').addEventListener('change', async function (e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        pendingImageDataUrl = await fileToCompressedDataURL(file);
+        const preview = document.getElementById('f-preview');
+        preview.src = pendingImageDataUrl;
+        preview.style.display = 'block';
+      } catch (err) {
+        setStatus('form-status', 'Could not read that image.', 'error');
+      }
+    });
+
+    async function loadEntries() {
+      setStatus('list-status', 'Loading…');
+      try {
+        const res = await fetch(FN_URL);
+        if (!res.ok) throw new Error('Failed to load (' + res.status + ')');
+        const entries = await res.json();
+        renderEntries(entries);
+        setStatus('list-status', '');
+      } catch (err) {
+        setStatus('list-status', 'Could not load entries: ' + err.message, 'error');
+      }
+    }
+
+    function renderEntries(entries) {
+      const list = document.getElementById('entry-list');
+      if (!entries.length) {
+        list.innerHTML = '<p style="color:var(--ink-500);font-size:.9rem;">No events yet.</p>';
+        return;
+      }
+      list.innerHTML = entries.map(function (e) {
+        return '<div class="entry-row">' +
+          '<img src="' + escapeAttr(e.image || '') + '" alt="">' +
+          '<div class="meta"><b>' + escapeHtml(e.date || '') + '</b> — ' + escapeHtml(e.location || '') + '<br>' + escapeHtml(e.description || '') + '</div>' +
+          '<div class="entry-actions">' +
+            '<button class="btn-small" onclick="startEdit(\'' + e.id + '\')">Edit</button>' +
+            '<button class="btn-small danger" onclick="deleteEntry(\'' + e.id + '\')">Delete</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+      window.__entries = entries;
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+    function escapeAttr(str) { return escapeHtml(str); }
+
+    function startEdit(id) {
+      const entry = (window.__entries || []).find(function (e) { return e.id === id; });
+      if (!entry) return;
+      editingId = id;
+      document.getElementById('form-title').textContent = 'Edit event';
+      document.getElementById('f-date').value = entry.date || '';
+      document.getElementById('f-time').value = entry.time || '';
+      document.getElementById('f-location').value = entry.location || '';
+      document.getElementById('f-description').value = entry.description || '';
+      pendingImageDataUrl = entry.image || null;
+      const preview = document.getElementById('f-preview');
+      if (entry.image) { preview.src = entry.image; preview.style.display = 'block'; }
+      document.getElementById('submit-btn').textContent = 'Save changes';
+      document.getElementById('cancel-edit-btn').style.display = 'inline-block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetForm() {
+      editingId = null;
+      pendingImageDataUrl = null;
+      document.getElementById('form-title').textContent = 'Add a new event';
+      document.getElementById('f-date').value = '';
+      document.getElementById('f-time').value = '';
+      document.getElementById('f-location').value = '';
+      document.getElementById('f-description').value = '';
+      document.getElementById('f-image').value = '';
+      document.getElementById('f-preview').style.display = 'none';
+      document.getElementById('submit-btn').textContent = 'Add event';
+      document.getElementById('cancel-edit-btn').style.display = 'none';
+    }
+
+    async function submitEntry() {
+      const payload = {
+        date: document.getElementById('f-date').value,
+        time: document.getElementById('f-time').value,
+        location: document.getElementById('f-location').value,
+        description: document.getElementById('f-description').value,
+        image: pendingImageDataUrl || ''
+      };
+      if (!payload.date || !payload.description) {
+        setStatus('form-status', 'Date and description are required.', 'error');
+        return;
+      }
+      try {
+        const method = editingId ? 'PUT' : 'POST';
+        if (editingId) payload.id = editingId;
+        const res = await fetch(FN_URL, {
+          method: method,
+          headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+          body: JSON.stringify(payload)
+        });
+        if (res.status === 401) {
+          setStatus('form-status', 'Wrong admin password. Re-enter it and try again.', 'error');
+          sessionStorage.removeItem('shendi_admin_key');
+          return;
+        }
+        if (!res.ok) throw new Error('Save failed (' + res.status + ')');
+        setStatus('form-status', editingId ? 'Event updated.' : 'Event added.', 'ok');
+        resetForm();
+        loadEntries();
+      } catch (err) {
+        setStatus('form-status', err.message, 'error');
+      }
+    }
+
+    async function deleteEntry(id) {
+      if (!confirm('Delete this event? This cannot be undone.')) return;
+      try {
+        const res = await fetch(FN_URL, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+          body: JSON.stringify({ id: id })
+        });
+        if (res.status === 401) {
+          setStatus('list-status', 'Wrong admin password.', 'error');
+          return;
+        }
+        if (!res.ok) throw new Error('Delete failed (' + res.status + ')');
+        loadEntries();
+      } catch (err) {
+        setStatus('list-status', err.message, 'error');
+      }
+    }
+
+    async function seedOriginalEvents() {
+      const originals = [
+        { date: '2024-05-13', time: '9:30 AM — 11:30 AM', location: 'Mbale Main Hospital', description: "We had our very first outreach. We reached out to the mothers in labour suit, post natal and HDU with our packages to celebrate mother's day together with them.", image: 'images/OUTREACH.jpg' },
+        { date: '2024-07-20', time: '2:30 PM — 5:30 PM', location: 'MSD', description: 'Our Foundation team, led by Wetsetse Suzan our Director, and Meya Ukasha Director of Finance, visited our scholarship recipients at Mbale School for the Deaf.', image: 'images/GIRLCHILD.jpg' }
+      ];
+      setStatus('list-status', 'Importing…');
+      try {
+        for (const entry of originals) {
+          const res = await fetch(FN_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+            body: JSON.stringify(entry)
+          });
+          if (res.status === 401) { setStatus('list-status', 'Wrong admin password.', 'error'); return; }
+          if (!res.ok) throw new Error('Import failed (' + res.status + ')');
+        }
+        setStatus('list-status', 'Imported.', 'ok');
+        loadEntries();
+      } catch (err) {
+        setStatus('list-status', err.message, 'error');
+      }
+    }
+  </script>
+</body>
+</html>
