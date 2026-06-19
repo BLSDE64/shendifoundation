@@ -13,10 +13,10 @@ import { getStore } from "@netlify/blobs";
 const STORE_NAME = "timeline";
 const KEY = "entries";
 
-function json(data, status = 200) {
+function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...extraHeaders },
   });
 }
 
@@ -37,7 +37,10 @@ export default async (req, context) => {
   if (req.method === "GET") {
     const entries = (await store.get(KEY, { type: "json" })) || [];
     entries.sort((a, b) => new Date(a.date) - new Date(b.date));
-    return json(entries);
+    return json(entries, 200, {
+      "Cache-Control": "no-store, no-cache, must-revalidate",
+      "Pragma": "no-cache",
+    });
   }
 
   // ---- Everything below changes data, so it requires the admin key ----
