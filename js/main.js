@@ -179,19 +179,22 @@
   try {
     var timelineList = document.getElementById("timeline-list");
     if (timelineList && window.fetch) {
-      fetch("/.netlify/functions/timeline")
+      fetch("/.netlify/functions/timeline?_=" + Date.now())
         .then(function (res) {
-          if (!res.ok) throw new Error("timeline fetch failed");
+          if (!res.ok) throw new Error("timeline fetch failed (" + res.status + ")");
           return res.json();
         })
         .then(function (entries) {
+          console.log("[SHENDI timeline] fetched", entries.length, "entries from function");
           if (Array.isArray(entries) && entries.length > 0) {
             timelineList.innerHTML = entries.map(buildTimelineItemHTML).join("");
+            console.log("[SHENDI timeline] public page updated with live entries");
+          } else {
+            console.log("[SHENDI timeline] no entries returned — keeping static fallback");
           }
-          // empty array or anything unexpected: leave the static fallback untouched
         })
-        .catch(function () {
-          // function not deployed, offline, etc.: leave the static fallback untouched
+        .catch(function (err) {
+          console.warn("[SHENDI timeline] fetch failed, keeping static fallback:", err.message);
         });
     }
   } catch (err) { console.error("dynamic timeline:", err); }
