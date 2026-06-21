@@ -22,6 +22,8 @@
     <a href="#aboutus" class="nav-link">About Us</a>
     <a href="#team" class="nav-link">Team</a>
     <a href="#Latestevents" class="nav-link">Time line</a>
+    <a href="gallery.html" class="nav-link">Gallery</a>
+    <a href="testimonial.html" class="nav-link">Testimonials</a>
     <a href="#contact-us" class="nav-link">Contact</a>
     <a href="docs/shendi company profile presentation 1.pdf" download="CompanyProfile.pdf" class="profile-link" style="text-align:center;display:block;">View Company Profile</a>
     <a href="#donate" class="donate-btn">Donate</a>
@@ -43,9 +45,11 @@
 
       <nav class="main-nav" role="navigation" aria-label="Primary navigation">
         <a href="index.html" class="nav-link">Home</a>
-        <a href="#team" class="nav-link">Team</a>
         <a href="#aboutus" class="nav-link">About Us</a>
         <a href="#Latestevents" class="nav-link">Time line</a>
+        <a href="#team" class="nav-link">Team</a>
+        <a href="gallery.html" class="nav-link">Gallery</a>
+        <a href="testimonial.html" class="nav-link">Testimonials</a>
         <a href="#contact-us" class="nav-link">Contact</a>
         <span class="nav-cta">
           <a href="docs/shendi company profile presentation 1.pdf" download="CompanyProfile.pdf" class="profile-link">Company Profile</a>
@@ -249,38 +253,51 @@
   <!-- ============================== TIMELINE ============================== -->
   <section class="timeline-section" id="Latestevents">
     <div class="container">
-      <div class="section-head center reveal">
+      <div class="section-head center">
         <span class="eyebrow">Where we've been</span>
         <h2 class="headline">Time line
           <svg class="underline-svg" viewBox="0 0 300 20" preserveAspectRatio="none" aria-hidden="true"><path d="M4 14 Q 80 4, 150 12 T 296 8"/></svg>
         </h2>
       </div>
+    </div>
 
-      <div class="timeline" id="timeline-list">
-        <div class="timeline-item reveal">
-          <div class="timeline-media"><img src="images/OUTREACH.jpg" alt="First outreach at Mbale Main Hospital"></div>
+    <div class="timeline" id="timeline-list" role="region" aria-label="Events timeline">
+      <div class="timeline-inner">
+
+        <div class="timeline-item">
           <div class="medal"><span class="d">13</span><span class="m">May 2024</span></div>
-          <div class="timeline-copy">
-            <div class="meta-row">
-              <span><span class="icon-clock-o"></span>9:30 AM — 11:30 AM</span>
-              <span><span class="icon-room"></span>Mbale Main Hospital</span>
+          <div class="timeline-card">
+            <div class="timeline-media"><img src="images/OUTREACH.jpg" alt="First outreach at Mbale Main Hospital"></div>
+            <div class="timeline-copy">
+              <div class="meta-row">
+                <span><span class="icon-clock-o"></span>9:30 AM — 11:30 AM</span>
+                <span><span class="icon-room"></span>Mbale Main Hospital</span>
+              </div>
+              <h3>We had our very first outreach. We reached out to the mothers in labour suit, post natal and HDU with our packages to celebrate mother's day together with them.</h3>
             </div>
-            <h3>We had our very first outreach. We reached out to the mothers in labour suit, post natal and HDU with our packages to celebrate mother's day together with them.</h3>
           </div>
         </div>
 
-        <div class="timeline-item reveal">
-          <div class="timeline-media"><img src="images/GIRLCHILD.jpg" alt="Visit to Mbale School for the Deaf"></div>
+        <div class="timeline-item">
           <div class="medal"><span class="d">20</span><span class="m">Jul 2024</span></div>
-          <div class="timeline-copy">
-            <div class="meta-row">
-              <span><span class="icon-clock-o"></span>2:30 PM — 5:30 PM</span>
-              <span><span class="icon-room"></span>MSD</span>
+          <div class="timeline-card">
+            <div class="timeline-media"><img src="images/GIRLCHILD.jpg" alt="Visit to Mbale School for the Deaf"></div>
+            <div class="timeline-copy">
+              <div class="meta-row">
+                <span><span class="icon-clock-o"></span>2:30 PM — 5:30 PM</span>
+                <span><span class="icon-room"></span>MSD</span>
+              </div>
+              <h3>Our Foundation team, led by Wetsetse Suzan our Director, and Meya Ukasha Director of Finance, visited our scholarship recipients at Mbale School for the Deaf.</h3>
             </div>
-            <h3>Our Foundation team, led by Wetsetse Suzan our Director, and Meya Ukasha Director of Finance, visited our scholarship recipients at Mbale School for the Deaf.</h3>
           </div>
         </div>
+
       </div>
+    </div>
+
+    <div class="timeline-nav" aria-label="Scroll timeline">
+      <button id="tl-prev" aria-label="Scroll left">&#8592;</button>
+      <button id="tl-next" aria-label="Scroll right">&#8594;</button>
     </div>
   </section>
 
@@ -514,22 +531,24 @@
       var img   = e.image || "images/MAIN.jpg";
       return (
         '<div class="timeline-item">' +
-          '<div class="timeline-media"><img src="' + esc(img) + '" alt=""></div>' +
           '<div class="medal"><span class="d">' + esc(day) + '</span><span class="m">' + esc(month) + '</span></div>' +
-          '<div class="timeline-copy">' +
-            '<div class="meta-row">' +
-              '<span><span class="icon-clock-o"></span>' + esc(e.time) + '</span>' +
-              '<span><span class="icon-room"></span>' + esc(e.location) + '</span>' +
+          '<div class="timeline-card">' +
+            '<div class="timeline-media"><img src="' + esc(img) + '" alt=""></div>' +
+            '<div class="timeline-copy">' +
+              '<div class="meta-row">' +
+                '<span><span class="icon-clock-o"></span>' + esc(e.time) + '</span>' +
+                '<span><span class="icon-room"></span>' + esc(e.location) + '</span>' +
+              '</div>' +
+              '<h3>' + esc(e.description) + '</h3>' +
             '</div>' +
-            '<h3>' + esc(e.description) + '</h3>' +
           '</div>' +
         '</div>'
       );
     }
 
     function load() {
-      var list = document.getElementById("timeline-list");
-      if (!list) { console.warn("[timeline] #timeline-list not found"); return; }
+      var list = document.querySelector("#timeline-list .timeline-inner");
+      if (!list) { console.warn("[timeline] .timeline-inner not found"); return; }
 
       var url = "/.netlify/functions/timeline?nc=" + Date.now();
       console.log("[timeline] fetching:", url);
