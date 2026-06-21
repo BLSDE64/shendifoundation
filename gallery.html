@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Gallery — SHENDI Foundation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="icon" href="images/SHENDI_LOGO-removebg.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="fonts/icomoon/style.css">
+  <link rel="stylesheet" href="css/redesign.css">
+  <style>
+    /* ---- gallery-specific additions ---- */
+    .gallery-hero{
+      background:linear-gradient(120deg,var(--canopy-900),var(--canopy-700));
+      padding:170px 0 80px;text-align:center;position:relative;overflow:hidden;
+    }
+    .gallery-hero::before{
+      content:"";position:absolute;inset:0;
+      background:radial-gradient(circle at 75% 30%,rgba(232,163,61,.18),transparent 55%);
+    }
+    .gallery-hero .container{position:relative;z-index:1;}
+    .gallery-hero .eyebrow{color:var(--gold-400);}
+    .gallery-hero h1{color:var(--white);font-size:clamp(2rem,4.5vw,3rem);}
+    .gallery-hero p{color:var(--linen-100);max-width:520px;margin:14px auto 0;opacity:.85;}
+
+    /* filter tabs */
+    .filter-bar{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding:48px 0 36px;}
+    .filter-btn{
+      padding:10px 22px;border-radius:100px;border:2px solid var(--linen-100);
+      background:var(--white);color:var(--ink-700);font-weight:600;font-size:.88rem;
+      cursor:pointer;transition:background .2s,border-color .2s,color .2s;
+    }
+    .filter-btn:hover,.filter-btn.active{
+      background:var(--canopy-800);border-color:var(--canopy-800);color:var(--white);
+    }
+
+    /* masonry grid */
+    .gallery-section{padding:0 0 90px;}
+    .masonry{
+      columns:3;column-gap:16px;
+      padding:0 24px;max-width:var(--container-w);margin:0 auto;
+    }
+    .masonry-item{
+      break-inside:avoid;margin-bottom:16px;
+      border-radius:var(--radius-md);overflow:hidden;
+      position:relative;cursor:pointer;
+      box-shadow:var(--shadow-sm);
+    }
+    .masonry-item img{
+      width:100%;display:block;
+      transition:transform .45s var(--ease),filter .3s;
+    }
+    .masonry-item:hover img{transform:scale(1.05);filter:brightness(.82);}
+    .masonry-item .overlay{
+      position:absolute;inset:0;
+      display:flex;flex-direction:column;justify-content:flex-end;
+      padding:18px;
+      background:linear-gradient(to top,rgba(22,41,31,.82) 0%,transparent 55%);
+      opacity:0;transition:opacity .35s var(--ease);
+    }
+    .masonry-item:hover .overlay{opacity:1;}
+    .overlay .tag{
+      font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+      color:var(--gold-400);margin-bottom:4px;
+    }
+    .overlay .caption{color:var(--white);font-size:.9rem;font-weight:500;line-height:1.4;}
+    .overlay .zoom-icon{
+      position:absolute;top:14px;right:14px;
+      width:36px;height:36px;border-radius:50%;
+      background:rgba(255,255,255,.18);
+      display:flex;align-items:center;justify-content:center;
+      color:var(--white);font-size:1rem;
+    }
+
+    /* lightbox */
+    .lightbox{
+      position:fixed;inset:0;z-index:2000;
+      background:rgba(15,22,18,.94);
+      display:flex;align-items:center;justify-content:center;
+      opacity:0;visibility:hidden;
+      transition:opacity .3s var(--ease),visibility .3s;
+    }
+    .lightbox.is-open{opacity:1;visibility:visible;}
+    .lightbox-inner{position:relative;max-width:90vw;max-height:90vh;display:flex;flex-direction:column;align-items:center;}
+    .lightbox-inner img{
+      max-width:90vw;max-height:76vh;
+      border-radius:var(--radius-md);object-fit:contain;
+      box-shadow:var(--shadow-lg);
+    }
+    .lightbox-caption{color:var(--linen-100);margin-top:14px;font-size:.95rem;text-align:center;}
+    .lb-close{
+      position:absolute;top:-46px;right:0;
+      background:transparent;border:0;color:var(--white);font-size:1.8rem;cursor:pointer;
+      line-height:1;transition:color .2s;
+    }
+    .lb-close:hover{color:var(--gold-400);}
+    .lb-prev,.lb-next{
+      position:fixed;top:50%;transform:translateY(-50%);
+      background:rgba(255,255,255,.1);border:0;color:var(--white);
+      width:50px;height:50px;border-radius:50%;font-size:1.4rem;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      transition:background .2s;
+    }
+    .lb-prev{left:16px;} .lb-next{right:16px;}
+    .lb-prev:hover,.lb-next:hover{background:rgba(232,163,61,.45);}
+
+    @media(max-width:900px){.masonry{columns:2;}}
+    @media(max-width:560px){.masonry{columns:1;padding:0 16px;}}
+  </style>
+</head>
+<body>
+
+  <div class="scrim"></div>
+  <nav class="mobile-nav" aria-label="Mobile navigation">
+    <button class="close-btn" aria-label="Close menu"><span class="icon-close2"></span></button>
+    <a href="index.html" class="nav-link">Home</a>
+    <a href="index.html#aboutus" class="nav-link">About Us</a>
+    <a href="index.html#Latestevents" class="nav-link">Time line</a>
+    <a href="index.html#team" class="nav-link">Team</a>
+    <a href="gallery.html" class="nav-link">Gallery</a>
+    <a href="testimonial.html" class="nav-link">Testimonials</a>
+    <a href="index.html#contact-us" class="nav-link">Contact</a>
+    <a href="docs/shendi company profile presentation 1.pdf" download="CompanyProfile.pdf" class="profile-link" style="text-align:center;display:block;">View Company Profile</a>
+    <a href="index.html#donate" class="donate-btn">Donate</a>
+  </nav>
+
+  <div class="topbar">
+    <div class="container">
+      <a href="https://x.com/ShendiFound1?s=08" aria-label="Twitter / X"><span class="icon-twitter"></span></a>
+      <a href="https://facebook.com/profile.php?id=100092661432521&mibextid=ZbWKwL" aria-label="Facebook"><span class="icon-facebook"></span></a>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="container">
+      <a href="index.html" class="brand">
+        <img src="images/SHENDI_LOGO-removebg 2.png" alt="SHENDI Foundation logo">
+        <span class="brand-name">SHENDI Foundation</span>
+      </a>
+      <nav class="main-nav" role="navigation" aria-label="Primary navigation">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="index.html#aboutus" class="nav-link">About Us</a>
+        <a href="index.html#Latestevents" class="nav-link">Time line</a>
+        <a href="index.html#team" class="nav-link">Team</a>
+        <a href="gallery.html" class="nav-link">Gallery</a>
+        <a href="testimonial.html" class="nav-link">Testimonials</a>
+        <a href="index.html#contact-us" class="nav-link">Contact</a>
+        <span class="nav-cta">
+          <a href="docs/shendi company profile presentation 1.pdf" download="CompanyProfile.pdf" class="profile-link">Company Profile</a>
+          <a href="index.html#donate" class="donate-btn">Donate</a>
+        </span>
+      </nav>
+      <button class="menu-toggle" aria-label="Open menu"><span class="icon-menu"></span></button>
+    </div>
+  </header>
+
+  <!-- PAGE HERO -->
+  <section class="gallery-hero">
+    <div class="container">
+      <span class="eyebrow">Moments captured</span>
+      <h1>Our Gallery</h1>
+      <p>Every photo is a story of compassion, community and change across Mbale.</p>
+    </div>
+  </section>
+
+  <!-- GALLERY -->
+  <section class="gallery-section">
+    <div class="filter-bar" id="filter-bar">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="outreach">Outreach</button>
+      <button class="filter-btn" data-filter="school">School</button>
+      <button class="filter-btn" data-filter="health">Health</button>
+      <button class="filter-btn" data-filter="team">Team</button>
+      <button class="filter-btn" data-filter="livelihood">Livelihood</button>
+    </div>
+
+    <div class="masonry" id="masonry-grid">
+
+      <div class="masonry-item" data-category="outreach" data-caption="Our very first outreach — Mbale Main Hospital, May 2024">
+        <img src="images/OUTREACH.jpg" alt="Outreach at Mbale Main Hospital" loading="lazy">
+        <div class="overlay">
+          <span class="zoom-icon">&#10064;</span>
+          <span class="tag">Outreach</span>
+          <span class="caption">Our very first outreach — Mbale Main Hospital</span>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-category="school" data-caption="Empowering girlchild education through scholarships">
+        <img src="images/GIRLCHILD.jpg" alt="Girlchild education" loading="lazy">
+        <div class="overlay">
+          <span class="zoom-icon">&#10064;</span>
+          <span class="tag">School</span>
+          <span class="caption">Empowering girlchild education</span>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-category="health" data-caption="Mothers wellness outreach — health support for mothers in need">
+        <img src="images/SHADE.jpg" alt="Mothers wellness" loading="lazy">
+        <div class="overlay">
+          <span class="zoom-icon">&#10064;</span>
+          <span class="tag">Health</span>
+          <span class="caption">Mothers wellness outreach</span>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-category="health" data-caption="Health outreach — supporting mothers in labour suit, post natal and HDU">
+        <img src="images/health.jpg" alt="Health outreach" loading="lazy">
+        <div class="overlay">
+          <span class="zoom-icon">&#10064;</span>
+          <span class="tag">Health</span>
+          <span class="caption">Supporting mothers in labour suit &amp; post natal</span>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-category="livelihood" data-caption="Livelihood program — equipping communities with tools and resources">
+        <img src="images/SHADE 3.jpg" alt="Livelihood program" loading="lazy">
+        <div class="overlay">
+          <span class="zoom-icon">&#10064;</span>
+          <span class="tag">Livelihood</span>
+          <span class="caption">Equipping communities with tools and resources</span>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-category="outreach" data-caption="Community outreach moments">
+        <img src="images/MAIN.jpg" alt="Outreach moment" loading="lazy">
+        <div class="overlay">
+          <span class="zoom-icon">&#10064;</span>
+          <span class="tag">Outreach</span>
+          <span class="caption">Community outreach moments</span>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-category="outreach" data-caption="Compassion in action across Mbale">
+        <img src="images/MAIN 2.jpg" alt="Outreach" loading="lazy">
+        <div class="overlay">
+          <span class="zoom-icon">&#10064;</span>
+          <span class="tag">Outreach</span>
+          <span class="caption">Compassion in action across Mbale</span>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-category="outreach" data-caption="Transforming lives one community at a time">
+        <img src="images/MAIN 3.jpg" alt="Outreach" loading="lazy">
+        <div class="overlay">
+          <span class="zoom-icon">&#10064;</span>
+          <span class="tag">Outreach</span>
+          <span class="caption">Transforming lives one community at a time</span>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-category="outreach" data-caption="Reaching the most vulnerable in our community">
+        <img src="images/MAIN 4.jpg" alt="Outreach" loading="lazy">
+        <div class="overlay">
+          <span class="zoom-icon">&#10064;</span>
+          <span class="tag">Outreach</span>
+          <span class="caption">Reaching the most vulnerable in our community</span>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-category="outreach" data-caption="Together we make a difference">
+        <img src="images/MAIN 5.jpg" alt="Outreach" loading="lazy">
+        <div class="overlay">
+          <span class="zoom-icon">&#10064;</span>
+          <span class="tag">Outreach</span>
+          <span class="caption">Together we make a difference</span>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-category="livelihood" data-caption="Items provided to sponsored students">
+        <img src="images/livelihood.jpg" alt="Livelihood items" loading="lazy">
+        <div class="overlay">
+          <span class="zoom-icon">&#10064;</span>
+          <span class="tag">Livelihood</span>
+          <span class="caption">Items provided to sponsored students</span>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-category="team" data-caption="Ms. Wetsetse Suzan — CEO &amp; Founder, SHENDI Foundation">
+        <img src="images/suzan.jpg" alt="Ms. Wetsetse Suzan" loading="lazy">
+        <div class="overlay">
+          <span class="zoom-icon">&#10064;</span>
+          <span class="tag">Team</span>
+          <span class="caption">Ms. Wetsetse Suzan — CEO &amp; Founder</span>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-category="team" data-caption="Ms. Harriet Kakai — Board Member, Mbale City Deputy Mayor">
+        <img src="images/hariet.jpg" alt="Ms. Harriet Kakai" loading="lazy">
+        <div class="overlay">
+          <span class="zoom-icon">&#10064;</span>
+          <span class="tag">Team</span>
+          <span class="caption">Ms. Harriet Kakai — Board Member</span>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-category="team" data-caption="Ms. Wetsetse Esther Lois — Secretary">
+        <img src="images/ESTHER.jpg" alt="Ms. Wetsetse Esther Lois" loading="lazy">
+        <div class="overlay">
+          <span class="zoom-icon">&#10064;</span>
+          <span class="tag">Team</span>
+          <span class="caption">Ms. Wetsetse Esther Lois — Secretary</span>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-category="team" data-caption="Kakayi Shakira — Board Member, Deputy Speaker Sironko District">
+        <img src="images/kakayi1.jpg" alt="Kakayi Shakira" loading="lazy">
+        <div class="overlay">
+          <span class="zoom-icon">&#10064;</span>
+          <span class="tag">Team</span>
+          <span class="caption">Kakayi Shakira — Board Member</span>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-category="outreach" data-caption="Our mission — equipping communities for a sustainable future">
+        <img src="images/mission.jpg" alt="Our mission" loading="lazy">
+        <div class="overlay">
+          <span class="zoom-icon">&#10064;</span>
+          <span class="tag">Outreach</span>
+          <span class="caption">Our mission in action</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- LIGHTBOX -->
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer">
+    <div class="lightbox-inner">
+      <button class="lb-close" id="lb-close" aria-label="Close">&times;</button>
+      <img id="lb-img" src="" alt="">
+      <p class="lightbox-caption" id="lb-caption"></p>
+    </div>
+    <button class="lb-prev" id="lb-prev" aria-label="Previous">&#8592;</button>
+    <button class="lb-next" id="lb-next" aria-label="Next">&#8594;</button>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <img src="images/SHENDI_LOGO-removebg 2.png" alt="SHENDI Foundation logo">
+          <h4>Key Components</h4>
+          <p>Rescue and Rehabilitation, Education and Skill Development, Family Support, Healthcare Services, Community Engagement, Advocacy, and Sustainability.</p>
+        </div>
+        <div>
+          <h4>Navigate</h4>
+          <ul class="footer-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="index.html#aboutus">About Us</a></li>
+            <li><a href="index.html#team">Team</a></li>
+            <li><a href="gallery.html">Gallery</a></li>
+            <li><a href="testimonial.html">Testimonials</a></li>
+            <li><a href="index.html#contact-us">Contact Us</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Follow Us</h4>
+          <div class="social-row">
+            <a href="https://facebook.com/profile.php?id=100092661432521&mibextid=ZbWKwL" aria-label="Facebook"><span class="icon-facebook"></span></a>
+            <a href="https://x.com/ShendiFound1?s=08" aria-label="Twitter / X"><span class="icon-twitter"></span></a>
+            <a href="https://www.linkedin.com/groups/14484437/" aria-label="LinkedIn"><span class="icon-linkedin"></span></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>Copyright &copy; <span class="current-year"></span> All rights reserved by E&amp;S Graphics UG</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/redesign.js" defer></script>
+  <script>
+  (function () {
+    /* ---- filter ---- */
+    var items = Array.from(document.querySelectorAll(".masonry-item"));
+    var btns  = Array.from(document.querySelectorAll(".filter-btn"));
+
+    btns.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var f = btn.getAttribute("data-filter");
+        btns.forEach(function (b) { b.classList.remove("active"); });
+        btn.classList.add("active");
+        items.forEach(function (item) {
+          var cat = item.getAttribute("data-category");
+          item.style.display = (f === "all" || cat === f) ? "" : "none";
+        });
+      });
+    });
+
+    /* ---- lightbox ---- */
+    var lb      = document.getElementById("lightbox");
+    var lbImg   = document.getElementById("lb-img");
+    var lbCap   = document.getElementById("lb-caption");
+    var lbClose = document.getElementById("lb-close");
+    var lbPrev  = document.getElementById("lb-prev");
+    var lbNext  = document.getElementById("lb-next");
+    var visibleItems = [];
+    var currentIdx = 0;
+
+    function getVisible() {
+      return items.filter(function (i) { return i.style.display !== "none"; });
+    }
+
+    function openAt(idx) {
+      visibleItems = getVisible();
+      if (!visibleItems.length) return;
+      currentIdx = ((idx % visibleItems.length) + visibleItems.length) % visibleItems.length;
+      var item = visibleItems[currentIdx];
+      lbImg.src = item.querySelector("img").src;
+      lbCap.textContent = item.getAttribute("data-caption") || "";
+      lb.classList.add("is-open");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeLb() {
+      lb.classList.remove("is-open");
+      document.body.style.overflow = "";
+      lbImg.src = "";
+    }
+
+    items.forEach(function (item, idx) {
+      item.addEventListener("click", function () { openAt(idx); });
+    });
+
+    lbClose.addEventListener("click", closeLb);
+    lb.addEventListener("click", function (e) { if (e.target === lb) closeLb(); });
+    lbPrev.addEventListener("click", function (e) { e.stopPropagation(); openAt(currentIdx - 1); });
+    lbNext.addEventListener("click", function (e) { e.stopPropagation(); openAt(currentIdx + 1); });
+
+    document.addEventListener("keydown", function (e) {
+      if (!lb.classList.contains("is-open")) return;
+      if (e.key === "Escape")      closeLb();
+      if (e.key === "ArrowLeft")  openAt(currentIdx - 1);
+      if (e.key === "ArrowRight") openAt(currentIdx + 1);
+    });
+
+    // touch swipe in lightbox
+    var touchStartX = null;
+    lb.addEventListener("touchstart", function (e) { touchStartX = e.touches[0].clientX; }, { passive: true });
+    lb.addEventListener("touchend",   function (e) {
+      if (touchStartX === null) return;
+      var dx = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(dx) > 50) { dx < 0 ? openAt(currentIdx + 1) : openAt(currentIdx - 1); }
+      touchStartX = null;
+    });
+  })();
+  </script>
+</body>
+</html>
