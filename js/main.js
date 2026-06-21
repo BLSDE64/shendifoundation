@@ -152,53 +152,6 @@
      at least one entry, that becomes the source of truth and replaces the
      fallback. If the function isn't deployed yet, is offline, or returns
      nothing, the static fallback simply stays exactly as it is. */
-  function escapeHtml(str) {
-    return String(str).replace(/[&<>"']/g, function (c) {
-      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
-    });
-  }
-  function buildTimelineItemHTML(entry) {
-    var d = entry.date ? new Date(entry.date + "T00:00:00") : null;
-    var day = d && !isNaN(d) ? d.getDate() : "";
-    var month = d && !isNaN(d) ? d.toLocaleString("en-US", { month: "short" }) + " " + d.getFullYear() : "";
-    var img = entry.image || "images/MAIN.jpg";
-    return (
-      '<div class="timeline-item">' +
-        '<div class="timeline-media"><img src="' + escapeHtml(img) + '" alt=""></div>' +
-        '<div class="medal"><span class="d">' + escapeHtml(day) + '</span><span class="m">' + escapeHtml(month) + "</span></div>" +
-        '<div class="timeline-copy">' +
-          '<div class="meta-row">' +
-            '<span><span class="icon-clock-o"></span>' + escapeHtml(entry.time || "") + "</span>" +
-            '<span><span class="icon-room"></span>' + escapeHtml(entry.location || "") + "</span>" +
-          "</div>" +
-          "<h3>" + escapeHtml(entry.description || "") + "</h3>" +
-        "</div>" +
-      "</div>"
-    );
-  }
-  try {
-    var timelineList = document.getElementById("timeline-list");
-    if (timelineList && window.fetch) {
-      fetch("/.netlify/functions/timeline?_=" + Date.now())
-        .then(function (res) {
-          if (!res.ok) throw new Error("timeline fetch failed (" + res.status + ")");
-          return res.json();
-        })
-        .then(function (entries) {
-          console.log("[SHENDI timeline] fetched", entries.length, "entries from function");
-          if (Array.isArray(entries) && entries.length > 0) {
-            timelineList.innerHTML = entries.map(buildTimelineItemHTML).join("");
-            console.log("[SHENDI timeline] public page updated with live entries");
-          } else {
-            console.log("[SHENDI timeline] no entries returned — keeping static fallback");
-          }
-        })
-        .catch(function (err) {
-          console.warn("[SHENDI timeline] fetch failed, keeping static fallback:", err.message);
-        });
-    }
-  } catch (err) { console.error("dynamic timeline:", err); }
-
   /* ---------------- footer year ---------------- */
   try {
     document.querySelectorAll(".current-year").forEach(function (el) {
