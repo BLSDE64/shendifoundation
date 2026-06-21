@@ -3,6 +3,21 @@
    Each feature below is wrapped in its own try/catch so a problem in one
    (a missing element, a typo, a browser quirk) can never stop the rest
    of the script — or the page's content — from working. */
+
+<head>
+  <meta charset="utf-8">
+  <title>SHENDI Foundation — Compassion in Action</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <link rel="icon" href="images/SHENDI_LOGO-removebg.png" type="image/gif">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Work+Sans:wght@400;500;600;700&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="fonts/icomoon/style.css">
+  <link rel="stylesheet" href="css/redesign.css">
+</head>
+   
 (function () {
   "use strict";
 
