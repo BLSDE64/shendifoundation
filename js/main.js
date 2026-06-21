@@ -3,21 +3,6 @@
    Each feature below is wrapped in its own try/catch so a problem in one
    (a missing element, a typo, a browser quirk) can never stop the rest
    of the script — or the page's content — from working. */
-
-<head>
-  <meta charset="utf-8">
-  <title>SHENDI Foundation — Compassion in Action</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <link rel="icon" href="images/SHENDI_LOGO-removebg.png" type="image/gif">
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Work+Sans:wght@400;500;600;700&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
-
-  <link rel="stylesheet" href="fonts/icomoon/style.css">
-  <link rel="stylesheet" href="css/redesign.css">
-</head>
-   
 (function () {
   "use strict";
 
@@ -167,6 +152,35 @@
      at least one entry, that becomes the source of truth and replaces the
      fallback. If the function isn't deployed yet, is offline, or returns
      nothing, the static fallback simply stays exactly as it is. */
+  /* ---------------- horizontal timeline drag + arrow nav ---------------- */
+  try {
+    var tl = document.getElementById("timeline-list");
+    if (tl) {
+      // drag to scroll
+      var isDown = false, startX, scrollLeft;
+      tl.addEventListener("mousedown", function (e) {
+        isDown = true; startX = e.pageX - tl.offsetLeft; scrollLeft = tl.scrollLeft;
+      });
+      tl.addEventListener("mouseleave", function () { isDown = false; });
+      tl.addEventListener("mouseup",    function () { isDown = false; });
+      tl.addEventListener("mousemove",  function (e) {
+        if (!isDown) return;
+        e.preventDefault();
+        tl.scrollLeft = scrollLeft - (e.pageX - tl.offsetLeft - startX);
+      });
+      // arrow buttons
+      var STEP = 340;
+      var prevBtn = document.getElementById("tl-prev");
+      var nextBtn = document.getElementById("tl-next");
+      if (prevBtn) prevBtn.addEventListener("click", function () {
+        tl.scrollBy({ left: -STEP, behavior: "smooth" });
+      });
+      if (nextBtn) nextBtn.addEventListener("click", function () {
+        tl.scrollBy({ left: STEP, behavior: "smooth" });
+      });
+    }
+  } catch (err) { console.error("timeline nav:", err); }
+
   /* ---------------- footer year ---------------- */
   try {
     document.querySelectorAll(".current-year").forEach(function (el) {
