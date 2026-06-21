@@ -495,5 +495,72 @@
   </footer>
 
   <script src="js/redesign.js" defer></script>
+
+  <!-- TIMELINE LIVE LOADER — inline so it can never be cached separately.
+       Fetches live entries from the Netlify Function and replaces the static
+       fallback. If anything fails, the static entries stay visible. -->
+  <script>
+  (function () {
+    function esc(str) {
+      return String(str || "").replace(/[&<>"']/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+      });
+    }
+
+    function buildItem(e) {
+      var d = e.date ? new Date(e.date + "T00:00:00") : null;
+      var day   = (d && !isNaN(d)) ? d.getDate() : "";
+      var month = (d && !isNaN(d)) ? d.toLocaleString("en-US", { month: "short" }) + " " + d.getFullYear() : "";
+      var img   = e.image || "images/MAIN.jpg";
+      return (
+        '<div class="timeline-item">' +
+          '<div class="timeline-media"><img src="' + esc(img) + '" alt=""></div>' +
+          '<div class="medal"><span class="d">' + esc(day) + '</span><span class="m">' + esc(month) + '</span></div>' +
+          '<div class="timeline-copy">' +
+            '<div class="meta-row">' +
+              '<span><span class="icon-clock-o"></span>' + esc(e.time) + '</span>' +
+              '<span><span class="icon-room"></span>' + esc(e.location) + '</span>' +
+            '</div>' +
+            '<h3>' + esc(e.description) + '</h3>' +
+          '</div>' +
+        '</div>'
+      );
+    }
+
+    function load() {
+      var list = document.getElementById("timeline-list");
+      if (!list) { console.warn("[timeline] #timeline-list not found"); return; }
+
+      var url = "/.netlify/functions/timeline?nc=" + Date.now();
+      console.log("[timeline] fetching:", url);
+
+      fetch(url, { cache: "no-store" })
+        .then(function (res) {
+          console.log("[timeline] response status:", res.status);
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          return res.json();
+        })
+        .then(function (entries) {
+          console.log("[timeline] entries received:", entries.length, entries);
+          if (!Array.isArray(entries) || entries.length === 0) {
+            console.log("[timeline] empty — keeping static fallback");
+            return;
+          }
+          list.innerHTML = entries.map(buildItem).join("");
+          console.log("[timeline] DOM updated with " + entries.length + " live entries");
+        })
+        .catch(function (err) {
+          console.error("[timeline] fetch error — static fallback stays:", err.message);
+        });
+    }
+
+    // Run after DOM is ready
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", load);
+    } else {
+      load();
+    }
+  })();
+  </script>
 </body>
 </html>
